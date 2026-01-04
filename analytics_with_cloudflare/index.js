@@ -9,7 +9,7 @@
       + '<meta property="og:site_counter_author_url" content="https://webviso.yestool.org"></meta>';
     
     if (document.head){
-      document.head.innerHTML += addHeadStr;
+      document.head.insertAdjacentHTML('beforeend', addHeadStr);
     }
   }, 500);
 

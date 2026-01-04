@@ -1,0 +1,12 @@
+{
+  "name": "cdnjs",
+  "version": "1.0.0",
+  "description": "CDN JS resources",
+  "scripts": {
+    "minify": "node minify.js",
+    "minify:watch": "node minify.js --watch"
+  },
+  "devDependencies": {
+    "terser": "^5.27.0"
+  }
+}
