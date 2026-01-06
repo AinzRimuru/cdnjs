@@ -5,11 +5,17 @@
   );
 
   setTimeout(function () {
-    var addHeadStr = '<meta property="og:site_counter_author" content="yestool"></meta>'
-      + '<meta property="og:site_counter_author_url" content="https://webviso.yestool.org"></meta>';
-    
-    if (document.head){
-      document.head.insertAdjacentHTML('beforeend', addHeadStr);
+    if (document.head) {
+      var meta1 = document.createElement('meta');
+      meta1.setAttribute('property', 'og:site_counter_author');
+      meta1.setAttribute('content', 'yestool');
+      
+      var meta2 = document.createElement('meta');
+      meta2.setAttribute('property', 'og:site_counter_author_url');
+      meta2.setAttribute('content', 'https://webviso.yestool.org');
+      
+      document.head.appendChild(meta1);
+      document.head.appendChild(meta2);
     }
   }, 500);
 
