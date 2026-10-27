@@ -1,0 +1,61 @@
+# 同步 LeanTrace 的 front/dist 到本仓库 leantrace/ 目录
+# 同步 push 到 main 后，由 static.yml 自动部署到 GitHub Pages（/leantrace/ 路径）
+#
+# 触发方式（两种，任一命中都会执行同步）：
+#   1. schedule：每天定时同步一次（UTC 04:00 / 北京时间 12:00）
+#   2. workflow_dispatch：Actions 页面手动触发
+
+name: Sync LeanTrace dist
+
+on:
+  schedule:
+    - cron: '0 4 * * *' # 每天 UTC 04:00（北京时间 12:00），GitHub Actions 使用 UTC 时区
+
+  workflow_dispatch:
+
+permissions:
+  contents: write # 允许 GITHUB_TOKEN 提交同步结果
+
+concurrency:
+  group: sync-leantrace
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout cdnjs
+        uses: actions/checkout@v4
+
+      - name: Fetch LeanTrace front/dist
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --filter=blob:none --sparse \
+            https://github.com/AinzRimuru/LeanTrace.git /tmp/LeanTrace
+          git -C /tmp/LeanTrace sparse-checkout set front/dist
+          echo "LT_SHA=$(git -C /tmp/LeanTrace rev-parse HEAD)" >> "$GITHUB_ENV"
+          echo "Fetched dist files:"
+          ls -la /tmp/LeanTrace/front/dist
+
+      - name: Sync to leantrace/
+        run: |
+          set -euo pipefail
+          # 先删旧目录再拷贝，确保 dist 中已删除的文件也会被移除
+          rm -rf leantrace
+          mkdir -p leantrace
+          cp -a /tmp/LeanTrace/front/dist/. leantrace/
+
+      - name: Commit and push if changed
+        run: |
+          set -euo pipefail
+          if [ -z "$(git status --porcelain leantrace/)" ]; then
+            echo "LeanTrace dist 无变化，跳过提交。"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add leantrace/
+          # 注意：不要加 [skip ci]，push 后需要触发 static.yml 部署 Pages
+          git commit -m "chore(sync): LeanTrace front/dist @ ${LT_SHA:0:7}"
+          git push
+          echo "已提交并推送，Pages 将自动部署。"
